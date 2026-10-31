@@ -1,0 +1,4 @@
+Alembic migrations for Kipu anonymizer.
+
+Run with:
+  uv run alembic upgrade head
