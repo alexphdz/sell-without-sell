@@ -359,7 +359,7 @@ class TestDataPreservation:
             {
                 "type": "message",
                 "user": "U1",
-                "text": "Cedula 1095637192",
+                "text": "Cedula 1234567890",
                 "ts": "123.001",
                 "client_msg_id": "msg-1",
             }
@@ -380,7 +380,7 @@ class TestDataPreservation:
         })
         orch = NormalizationOrchestrator(store)
         ds = orch.normalize(SNAPSHOT_ID)
-        assert "1095637192" in ds.chats[0].text
+        assert "1234567890" in ds.chats[0].text
 
     def test_financial_amount_preserved(self, store: SnapshotStore) -> None:
         csv = b"tx_id,monto\nTX-1,520000"

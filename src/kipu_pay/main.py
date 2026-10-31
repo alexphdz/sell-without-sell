@@ -85,6 +85,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             headers={"x-request-id": request.headers.get("x-request-id", "-")},
         )
 
+    from kipu_pay.api.router import router as participant_router
+
+    app.include_router(participant_router)
+
     @app.get("/v1/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
         """Liveness probe; does not require database."""

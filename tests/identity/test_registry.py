@@ -129,12 +129,12 @@ class TestDeterministicIds:
 class TestIdentifiers:
     async def test_dotted_cedula_normalized(self, db_session) -> None:
         svc = RegistryService(db_session)
-        await svc.build_registry([_client("CL-1", "Ana Gómez", "1.095.637.192")])
+        await svc.build_registry([_client("CL-1", "Ana Gómez", "1.234.567.890")])
         ident = await db_session.scalar(
             select(IdentityIdentifier).where(IdentityIdentifier.identifier_type == "cedula")
         )
-        assert ident.normalized_value == "1095637192"
-        assert ident.original_value == "1.095.637.192"  # original preserved
+        assert ident.normalized_value == "1234567890"
+        assert ident.original_value == "1.234.567.890"  # original preserved
 
     async def test_email_original_preserved(self, db_session) -> None:
         svc = RegistryService(db_session)

@@ -12,16 +12,16 @@ from kipu_pay.identity.normalizers import (
 
 class TestCedula:
     def test_dotted_cedula(self) -> None:
-        assert normalize_cedula("1.095.637.192") == "1095637192"
+        assert normalize_cedula("1.234.567.890") == "1234567890"
 
     def test_plain_cedula(self) -> None:
-        assert normalize_cedula("1095637192") == "1095637192"
+        assert normalize_cedula("1234567890") == "1234567890"
 
     def test_spaced_cedula(self) -> None:
         assert normalize_cedula("71 170 753") == "71170753"
 
     def test_equivalence(self) -> None:
-        assert normalize_cedula("1.095.637.192") == normalize_cedula("1095637192")
+        assert normalize_cedula("1.234.567.890") == normalize_cedula("1234567890")
 
     def test_not_numeric(self) -> None:
         assert normalize_cedula("CL-12345") is None
