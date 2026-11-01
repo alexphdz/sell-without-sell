@@ -48,7 +48,9 @@ async def run_pipeline_job(
     """Execute the full pipeline: ingest -> normalize -> registry -> detect -> anonymize -> write output."""
     import json
 
-    engine = create_async_engine(db_url)
+    from kipu_pay.core.db import normalize_database_url
+
+    engine = create_async_engine(normalize_database_url(db_url))
     maker = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
     t0 = time.time()
 

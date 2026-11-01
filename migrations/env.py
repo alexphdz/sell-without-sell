@@ -18,14 +18,23 @@ if config.config_file_name is not None:
 target_metadata = None
 
 
+def _normalize_url(url: str) -> str:
+    """Rewrite postgres:// and postgresql:// schemes to postgresql+asyncpg://."""
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
 def _get_database_url() -> str:
     """Resolve database URL from environment or config."""
     url = config.get_main_option("sqlalchemy.url")
     if url:
-        return url
+        return _normalize_url(url)
     env_url = os.getenv("DATABASE_URL")
     if env_url:
-        return env_url
+        return _normalize_url(env_url)
     raise RuntimeError(
         "DATABASE_URL environment variable or sqlalchemy.url in alembic.ini is required."
     )

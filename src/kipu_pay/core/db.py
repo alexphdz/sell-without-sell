@@ -21,13 +21,27 @@ _engine = None
 _session_maker = None
 
 
+def normalize_database_url(url: str) -> str:
+    """Rewrite managed-hosting URL schemes to the asyncpg dialect.
+
+    Render/Heroku provide ``postgres://`` (unknown to SQLAlchemy 2.x) or
+    ``postgresql://`` (resolves to a sync driver we do not ship). Both must
+    become ``postgresql+asyncpg://``.
+    """
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
 def _get_engine(settings: Settings):
     global _engine
     if _engine is None:
         if settings.database_url is None:
             raise ConfigurationError("DATABASE_URL is not configured")
         _engine = create_async_engine(
-            settings.database_url.get_secret_value(),
+            normalize_database_url(settings.database_url.get_secret_value()),
             pool_size=10,
             max_overflow=20,
             pool_pre_ping=True,

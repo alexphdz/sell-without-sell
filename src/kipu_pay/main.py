@@ -32,12 +32,37 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def _run_startup_migrations() -> None:
+    """Best-effort `alembic upgrade head` so a fresh database gets its schema.
+
+    Executed in a worker thread (alembic env.py drives its own event loop).
+    Failures are logged, never fatal: /health must stay available.
+    """
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    root = Path(__file__).resolve().parents[2]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "migrations"))
+    command.upgrade(cfg, "head")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: startup and shutdown."""
+    import asyncio
+
     settings = get_settings()
     configure_logging(log_level=settings.log_level, json_format=settings.app_env != "local")
     logger.info("application_startup", version=settings.app_version, env=settings.app_env)
+    if settings.database_url is not None:
+        try:
+            await asyncio.to_thread(_run_startup_migrations)
+            logger.info("startup_migrations_applied")
+        except Exception:
+            logger.exception("startup_migrations_failed")
     yield
     logger.info("application_shutdown")
 
