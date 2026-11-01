@@ -87,6 +87,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     from kipu_pay.api.router import router as participant_router
 
+    # Same handlers exposed under both prefixes: FRONTIER's validator calls
+    # root-level paths while the published contract uses /v1.
+    app.include_router(participant_router, prefix="/v1")
     app.include_router(participant_router)
 
     @app.get("/v1/health", response_model=HealthResponse)

@@ -26,7 +26,9 @@ from kipu_pay.normalization.models import (
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/v1")
+# No prefix here: main.py includes this router twice (at root and under /v1)
+# so the FRONTIER validator can call either /anonymize or /v1/anonymize, etc.
+router = APIRouter()
 
 _ALLOWED_FILES = {"chats.jsonl", "docs.jsonl", "tables.jsonl", "entities.json"}
 _background_tasks: set[asyncio.Task] = set()
