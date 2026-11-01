@@ -178,3 +178,40 @@ class TestClientRequests:
         await client.get("/b")
         assert len(httpx_mock.get_requests()) == 2
         await client.close()
+
+
+class TestAsyncContextManager:
+    """Regression: FrontierClient must support `async with` (jobs.py relies on it).
+
+    Previously the class defined only close() and raised
+    'FrontierClient object does not support the asynchronous context manager
+    protocol' when used as `async with FrontierClient(...) as client`.
+    """
+
+    async def test_enter_returns_self_and_opens_client(self):
+        async with FrontierClient(base_url="https://api.example.com/v1", token="tok") as client:
+            assert isinstance(client, FrontierClient)
+            inner = client._client
+            assert inner is not None and not inner.is_closed
+        # After exit the underlying HTTP client is closed.
+        assert client._client is not None and client._client.is_closed
+
+    async def test_request_works_inside_context(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(url="https://api.example.com/v1/ping", status_code=200, json={})
+        async with FrontierClient(
+            base_url="https://api.example.com/v1", token="tok", max_requests_per_minute=6000
+        ) as client:
+            status, _body, _headers = await client.get("/ping")
+            assert status == 200
+        assert client._client is not None and client._client.is_closed
+
+    async def test_client_closed_on_exception(self):
+        captured: FrontierClient | None = None
+        with pytest.raises(ValueError, match="boom"):
+            async with FrontierClient(base_url="https://api.example.com/v1", token="tok") as client:
+                captured = client
+                assert client._client is not None and not client._client.is_closed
+                raise ValueError("boom")
+        # The HTTP client must be closed even when the body raised.
+        assert captured is not None
+        assert captured._client is not None and captured._client.is_closed

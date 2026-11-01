@@ -212,3 +212,12 @@ class FrontierClient:
         if self._client is not None and not self._client.is_closed:
             await self._client.aclose()
             logger.info("frontier_client_closed")
+
+    async def __aenter__(self) -> "FrontierClient":
+        """Enter async context; the underlying HTTP client is created lazily."""
+        await self._get_client()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        """Exit async context; always close the HTTP client, even on error."""
+        await self.close()
