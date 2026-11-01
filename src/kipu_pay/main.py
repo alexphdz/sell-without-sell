@@ -90,6 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(participant_router)
 
     @app.get("/v1/health", response_model=HealthResponse)
+    @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
         """Liveness probe; does not require database."""
         return HealthResponse(

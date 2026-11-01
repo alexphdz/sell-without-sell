@@ -90,3 +90,16 @@ def test_health_db_not_required():
     client = _client(settings)
     response = client.get("/v1/health")
     assert response.status_code == 200
+
+
+def test_health_alias_both_paths_200():
+    """Regression: FRONTIER validator calls GET /health at root; /v1/health must also work."""
+    client = _client()
+    r_root = client.get("/health")
+    r_v1 = client.get("/v1/health")
+    assert r_root.status_code == 200
+    assert r_v1.status_code == 200
+    assert r_root.json() == r_v1.json()
+    body = r_root.json()
+    assert body["status"] == "ok"
+    assert set(body.keys()) == {"status", "team", "version", "models"}
